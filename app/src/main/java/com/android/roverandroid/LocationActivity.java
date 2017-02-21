@@ -6,8 +6,8 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,8 +15,8 @@ import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
+import com.android.roverandroid.database.DbHandler;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -42,6 +42,8 @@ public class LocationActivity extends AppCompatActivity implements
     private float mAccelLast;
     boolean isMoving=false;
 
+    private double lastLatitude,latitude,lastLongitude,longitude;
+    private int accuracy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +76,8 @@ public class LocationActivity extends AppCompatActivity implements
                 }
             }
         });
+        DbHandler dbHandler=new DbHandler(this);
+        dbHandler.getAllLocations();
     }
 
     @Override
@@ -105,7 +109,7 @@ public class LocationActivity extends AppCompatActivity implements
      * @param bundle
      */
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
+    public void onConnected(Bundle bundle) {
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(1000); //update location every second
@@ -129,7 +133,7 @@ public class LocationActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.e(TAG,"GoogleApiClient connection has failed");
     }
 
@@ -139,9 +143,38 @@ public class LocationActivity extends AppCompatActivity implements
      */
     @Override
     public void onLocationChanged(Location location) {
-        Log.e(TAG,location.toString());
+       // Log.e(TAG,location.toString());
+        lastLatitude=latitude;
+        lastLongitude=longitude;
+        latitude=location.getLatitude();
+        longitude=location.getLongitude();
+        accuracy=(int)location.getAccuracy();
         tvLocation.setText(location.toString());
+       // Log.e(TAG,"Lat : "+latitude+" Long : "+longitude+"Acc : "+accuracy);
+
+       if(isMoving){
+        if(isLocationChanged()) {
+               Log.e(TAG, "Lat : " + latitude + " Last lat : " + lastLatitude + "Long : " + longitude + "Lastlong : " + lastLongitude);
+               DbHandler dbHandler=new DbHandler(this);
+               dbHandler.insertCurrentLocation(latitude,longitude,accuracy);
+               dbHandler.getAllLocations();
+           }
+        }
     }
+
+    /**
+     * This method finds out if the location is actually changed
+     * by taking abs differences of latitude and longitude with there old values
+     * @return boolean
+     */
+    public boolean isLocationChanged(){
+
+        if(Math.abs(latitude-lastLatitude)>0 || Math.abs(longitude-lastLongitude) >0)
+            return true;
+        else
+            return false;
+    }
+
 
     /**
      * Handles event when accelerometer value is changed
@@ -153,7 +186,7 @@ public class LocationActivity extends AppCompatActivity implements
         tvX.setText("X : "+String.valueOf(event.values[0]));
         tvY.setText("Y : "+String.valueOf(event.values[1]));
         tvZ.setText("Z : "+String.valueOf(event.values[2]));
-        Log.e(TAG,"X : "+ event.values[0]+" Y : "+event.values[1]+" Z : "+event.values[2]);
+      //  Log.e(TAG,"X : "+ event.values[0]+" Y : "+event.values[1]+" Z : "+event.values[2]);
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
             mGravity = event.values.clone();
             // Shake detection
@@ -167,24 +200,18 @@ public class LocationActivity extends AppCompatActivity implements
             mAccel=(float)round(mAccel,3);
 
             if(Math.abs(mAccel) > 1){
-                //avgSpeedText.setText(Float.toString(Math.abs(mAccel)));
                 isMoving=true;
-
             }
             else if(Math.abs(mAccel)<0.003 && Math.abs(mAccel)>0){
                 isMoving=false;
-                // avgSpeedText.setText(Float.toString(Math.abs(mAccel)));
             }
-
         }
-        Log.e("Moving : "," "+isMoving);
-
+        //Log.e("Moving : "," "+isMoving);
     }
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
         //Method for accelerometer accuracyChanged event .Not in Use
     }
-
     /**
      *Static method for rounding
      * @param value
