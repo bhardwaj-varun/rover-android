@@ -30,7 +30,7 @@ public class LocationActivity extends AppCompatActivity implements
         SensorEventListener {
 
     private final static String TAG = "LocationActivityTAG";
-    private TextView tvLocation,tvX,tvY,tvZ;
+    private TextView tvLatitude,tvLongitude,tvAccuracy,tvX,tvY,tvZ;
     private SwitchCompat switchCompatButton;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
@@ -59,7 +59,9 @@ public class LocationActivity extends AppCompatActivity implements
         //Accelerometer Sensor
         mySensor=SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         //defining textview and toggle Button
-        tvLocation = (TextView) findViewById(R.id.tvLocation);
+        tvLatitude = (TextView) findViewById(R.id.tvLatitude);
+        tvLongitude = (TextView) findViewById(R.id.tvLongitude);
+        tvAccuracy = (TextView) findViewById(R.id.tvAccuracy);
         tvX=(TextView) findViewById(R.id.tvX);
         tvY=(TextView) findViewById(R.id.tvY);
         tvZ=(TextView) findViewById(R.id.tvZ);
@@ -68,7 +70,6 @@ public class LocationActivity extends AppCompatActivity implements
         switchCompatButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
-                    //connect google api client
                     mGoogleApiClient.connect();
                 } else {
                     //disconnect google api client
@@ -149,7 +150,9 @@ public class LocationActivity extends AppCompatActivity implements
         latitude=location.getLatitude();
         longitude=location.getLongitude();
         accuracy=(int)location.getAccuracy();
-        tvLocation.setText(location.toString());
+        tvLatitude.setText(String.valueOf(latitude));
+        tvLongitude.setText(String.valueOf(longitude));
+        tvAccuracy.setText(String.valueOf(accuracy));
        // Log.e(TAG,"Lat : "+latitude+" Long : "+longitude+"Acc : "+accuracy);
 
        if(isMoving){

@@ -23,6 +23,7 @@ public class DbHandler extends  Activity{
     public DbHandler(Context context){
         this.context=context;
     };
+
     public void insertCurrentLocation(double latitude,double longitude,int accuracy){
         locationDbHelper= new LocationDbHelper(context);
         SQLiteDatabase db=locationDbHelper.getWritableDatabase();
