@@ -34,6 +34,7 @@ public class LocationActivity extends AppCompatActivity implements
     private SwitchCompat switchCompatButton;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
+    protected Location mLastLocation;
     private Sensor mySensor;
     private SensorManager SM;
     private float[] mGravity;
@@ -66,8 +67,9 @@ public class LocationActivity extends AppCompatActivity implements
         tvY=(TextView) findViewById(R.id.tvY);
         tvZ=(TextView) findViewById(R.id.tvZ);
         switchCompatButton = (SwitchCompat) findViewById(R.id.switchCompatButton);
+        mGoogleApiClient.connect();
         //toggle button on CheckedChangeListener
-        switchCompatButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      /*  switchCompatButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
                     mGoogleApiClient.connect();
@@ -76,7 +78,7 @@ public class LocationActivity extends AppCompatActivity implements
                     mGoogleApiClient.disconnect();
                 }
             }
-        });
+        });*/
         DbHandler dbHandler=new DbHandler(this);
         dbHandler.getAllLocations();
     }
@@ -89,7 +91,9 @@ public class LocationActivity extends AppCompatActivity implements
 
     @Override
     protected void onStop() {
+        mGoogleApiClient.disconnect();
         super.onStop();
+
         //disconnect google api
     }
     @Override
@@ -111,6 +115,9 @@ public class LocationActivity extends AppCompatActivity implements
      */
     @Override
     public void onConnected(Bundle bundle) {
+        mLastLocation=LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        if(mLastLocation!=null)
+            Log.e(TAG,"last fetched Location is"+mLastLocation.toString());
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(1000); //update location every second
@@ -144,7 +151,7 @@ public class LocationActivity extends AppCompatActivity implements
      */
     @Override
     public void onLocationChanged(Location location) {
-       // Log.e(TAG,location.toString());
+        Log.e(TAG,location.toString());
         lastLatitude=latitude;
         lastLongitude=longitude;
         latitude=location.getLatitude();
@@ -153,16 +160,16 @@ public class LocationActivity extends AppCompatActivity implements
         tvLatitude.setText(String.valueOf(latitude));
         tvLongitude.setText(String.valueOf(longitude));
         tvAccuracy.setText(String.valueOf(accuracy));
-       // Log.e(TAG,"Lat : "+latitude+" Long : "+longitude+"Acc : "+accuracy);
+       Log.e(TAG,"Lat : "+latitude+" Long : "+longitude+"Acc : "+accuracy);
 
-       if(isMoving){
+      /* if(isMoving){
         if(isLocationChanged()) {
                Log.e(TAG, "Lat : " + latitude + " Last lat : " + lastLatitude + "Long : " + longitude + "Lastlong : " + lastLongitude);
                DbHandler dbHandler=new DbHandler(this);
                dbHandler.insertCurrentLocation(latitude,longitude,accuracy);
                dbHandler.getAllLocations();
            }
-        }
+        }*/
     }
 
     /**
@@ -229,4 +236,5 @@ public class LocationActivity extends AppCompatActivity implements
         long tmp = Math.round(value);
         return (double) tmp / factor;
     }
+
 }
