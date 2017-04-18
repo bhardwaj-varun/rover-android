@@ -1,11 +1,13 @@
 package com.android.rover;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,11 +24,15 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class LocationActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        SensorEventListener {
+        SensorEventListener,
+        ConnectivityReceiver.ConnectivityReceiverListener {
 
     private final static String TAG = "LocationActivityTAG";
     private GoogleApiClient mGoogleApiClient;
@@ -63,7 +69,6 @@ public class LocationActivity extends AppCompatActivity implements
         dbHandler.getAllLocations();
 
     }
-
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -93,6 +98,7 @@ public class LocationActivity extends AppCompatActivity implements
         super.onResume();
         //Register Sensor Listener
         SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_FASTEST);
+        ConnectionApplication.getInstance().setConnectivityListener(this);
     }
     @Override
     protected void onPause(){
@@ -217,5 +223,25 @@ public class LocationActivity extends AppCompatActivity implements
             return true;
         else
             return false;
+    }
+
+
+    private boolean isNetworkConnected(){
+        ConnectivityManager cm= (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() !=null && cm.getActiveNetworkInfo().isConnected();
+    }
+    private boolean isInternetAvailable(){
+        try {
+            final InetAddress address=InetAddress.getByName("https://www.google.com");
+            return !address.equals("");
+        }catch (UnknownHostException e)
+        {e.printStackTrace();}
+        return false;
+        }
+
+    @Override
+    public void onNetworkConnectionChanged(boolean isConnected) {
+        Toast.makeText(this,"Connected : "+isConnected,Toast.LENGTH_SHORT).show();
+        Log.e(TAG,"Connection Status : "+isConnected);
     }
 }
