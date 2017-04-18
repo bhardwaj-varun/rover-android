@@ -15,6 +15,7 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.rover.database.DbHandler;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -31,7 +32,6 @@ public class LocationActivity extends AppCompatActivity implements
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private TextView tvLatitude,tvLongitude,tvAccuracy,tvAltitude,tvX,tvY,tvZ,tvIsMoving;
-    protected Location mLastLocation;
     private Sensor mySensor;
     private SensorManager SM;
     private float[] mGravity;
@@ -39,7 +39,8 @@ public class LocationActivity extends AppCompatActivity implements
     private float mAccelCurrent;
     private float mAccelLast;
     boolean isMoving=false;
-
+    private double lastLatitude,latitude,lastLongitude,longitude,altitude,vel,bear,et;
+    private int accuracy;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +58,9 @@ public class LocationActivity extends AppCompatActivity implements
         SM=(SensorManager)getSystemService(SENSOR_SERVICE);
         //Accelerometer Sensor
         mySensor=SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        DbHandler dbHandler=new DbHandler(this);
+        dbHandler.getAllLocations();
 
     }
 
@@ -131,10 +135,31 @@ public class LocationActivity extends AppCompatActivity implements
     @Override
     public void onLocationChanged(Location location) {
         Log.e(TAG,location.toString());
-        tvLatitude.setText(Double.toString(location.getLatitude()));
-        tvLongitude.setText(Double.toString(location.getLongitude()));
-        tvAccuracy.setText(Double.toString(location.getAccuracy()));
-        tvAltitude.setText(Double.toString(location.getAltitude()));
+        lastLatitude=latitude;
+        lastLongitude=longitude;
+        latitude=location.getLatitude();
+        longitude=location.getLongitude();
+        altitude=location.getAltitude();
+        accuracy=(int)location.getAccuracy();
+        et=location.getElapsedRealtimeNanos();
+        vel=location.getSpeed();
+        bear=location.getBearing();
+        if(location.getExtras()!=null)
+            Log.e(TAG,"Location Extras" +location.getExtras().toString());
+        tvLatitude.setText(String.valueOf(latitude));
+        tvLongitude.setText(String.valueOf(longitude));
+        tvAccuracy.setText(String.valueOf(accuracy));
+        tvAltitude.setText(String.valueOf(altitude));
+
+        if(isMoving){
+            if(isLocationChanged()){
+                Log.e(TAG,"Location changed : "+location.toString());
+                DbHandler dbHandler=new DbHandler(this);
+                dbHandler.insertCurrentLocation(latitude,longitude,accuracy);
+                dbHandler.getAllLocations();
+            }
+        }
+
     }
 
     @Override
@@ -142,10 +167,8 @@ public class LocationActivity extends AppCompatActivity implements
         tvX.setText("X : "+String.valueOf(event.values[0]));
         tvY.setText("Y : "+String.valueOf(event.values[1]));
         tvZ.setText("Z : "+String.valueOf(event.values[2]));
-
         if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
             mGravity =event.values.clone();
-
             //shake detection
             float x = mGravity[0];
             float y = mGravity[1];
@@ -155,14 +178,12 @@ public class LocationActivity extends AppCompatActivity implements
             float delta = mAccelCurrent - mAccelLast;
             mAccel = mAccel*0.9f + delta;
             mAccel = (float)round(mAccel,3);
-
             if(Math.abs(mAccel) > 1){
                 isMoving = true;
             }
             else if(Math.abs(mAccel) < 0.003 && Math.abs(mAccel)>0){
                 isMoving = false;
             }
-
         }
         tvIsMoving.setText("IsMoving:"+isMoving);
     }
@@ -175,14 +196,26 @@ public class LocationActivity extends AppCompatActivity implements
      */
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
-
         long factor = (long) Math.pow(10, places);
         value = value * factor;
         long tmp = Math.round(value);
         return (double) tmp / factor;
     }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+    /**
+     * This method finds out if the location is actually changed
+     * by taking abs differences of latitude and longitude with there old values
+     * @return boolean
+     */
+    public boolean isLocationChanged(){
+
+        if(Math.abs(latitude-lastLatitude)>0 || Math.abs(longitude-lastLongitude) >0)
+            return true;
+        else
+            return false;
     }
 }

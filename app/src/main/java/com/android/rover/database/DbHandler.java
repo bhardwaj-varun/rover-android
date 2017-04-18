@@ -55,7 +55,8 @@ public class DbHandler extends  Activity{
                 double latitude=cursor.getDouble(cursor.getColumnIndex(LocationEntry.COLUMN_LAT));
                 double longitude=cursor.getDouble(cursor.getColumnIndex(LocationEntry.COLUMN_LONG));
                 int accuracy=cursor.getInt(cursor.getColumnIndex(LocationEntry.COLUMN_ACCURACY));
-                Log.e("row id : "+ _id," Lat: "+latitude+" Long: "+longitude+" Accuracy :"+accuracy);
+                String dateTIme=cursor.getString(cursor.getColumnIndex(LocationEntry.COLUMN_DATETIME));
+                Log.e("row id : "+ _id," Lat: "+latitude+" Long: "+longitude+" Accuracy :"+accuracy+" DateTime : "+ dateTIme);
             }
 
         } finally {

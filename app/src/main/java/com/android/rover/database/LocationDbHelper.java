@@ -41,7 +41,8 @@ public class LocationDbHelper extends SQLiteOpenHelper {
                 +LocationEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + LocationEntry.COLUMN_LAT +" DOUBLE PRECISION NOT NULL , "
                 + LocationEntry.COLUMN_LONG + " DOUBLE PRECISION NOT NULL , "
-                + LocationEntry.COLUMN_ACCURACY +" INTEGER NOT NULL ); ";
+                + LocationEntry.COLUMN_ACCURACY +" INTEGER NOT NULL, "
+                + LocationEntry.COLUMN_DATETIME + " DATETIME DEFAULT CURRENT_TIMESTAMP ); ";
 
         //executing create table statement on db
         db.execSQL(SQL_CREATE_LOCATION_TABLE);

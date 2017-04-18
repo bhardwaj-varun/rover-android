@@ -22,5 +22,6 @@ public final class LocationContract {
         public final static String COLUMN_LAT="latitude";   //column latitude
         public final static String COLUMN_LONG="longitude"; //column longitude
         public final static String COLUMN_ACCURACY="accuracy"; //column accuracy
+        public final static String COLUMN_DATETIME="dateTime"; //column dateTIme
     }
 }
