@@ -1,15 +1,13 @@
-package com.android.roverandroid.database;
+package com.android.rover.database;
 
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
-import android.widget.TextView;
 
-import com.android.roverandroid.database.LocationContract.LocationEntry;
+import com.android.rover.database.LocationContract.LocationEntry;
 /**
  * Class DbHandler handles CRUD operations
  * Extends Activity Class to obtain ApplicationContext

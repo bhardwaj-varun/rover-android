@@ -1,4 +1,4 @@
-package com.android.roverandroid;
+package com.android.rover;
 
 /**
  * Created by root on 16/4/17.

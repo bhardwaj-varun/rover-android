@@ -1,9 +1,9 @@
-package com.android.roverandroid.database;
+package com.android.rover.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import com.android.roverandroid.database.LocationContract.LocationEntry;
+import com.android.rover.database.LocationContract.LocationEntry;
 
 /**
  * LocationDbHelper Class Extending SQLiteOpenHelper

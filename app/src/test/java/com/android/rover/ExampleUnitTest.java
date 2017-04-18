@@ -1,4 +1,4 @@
-package com.android.roverandroid;
+package com.android.rover;
 
 import org.junit.Test;
 

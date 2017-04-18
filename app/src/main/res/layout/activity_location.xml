@@ -10,7 +10,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:orientation="vertical"
-    tools:context="com.android.roverandroid.LocationActivity">
+    tools:context="com.android.rover.LocationActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -61,7 +61,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="Latitude : "/>
+                    android:text="Latitude: "/>
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -81,7 +81,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="Longitude : "/>
+                    android:text="Longitude: "/>
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -101,7 +101,7 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="Accuracy : "/>
+                    android:text="Accuracy: "/>
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
@@ -135,7 +135,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_marginTop="20dp"
-                android:text="X"
+                android:text="X: "
                 android:layout_weight="1"
                 android:layout_gravity="center_horizontal"
                 />
@@ -145,7 +145,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:layout_marginTop="20dp"
-                android:text="Y"
+                android:text="Y: "
                 android:layout_gravity="center_horizontal"/>
             <TextView
                 android:id="@+id/tvZ"
@@ -153,7 +153,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:layout_marginTop="20dp"
-                android:text="Z"
+                android:text="Z: "
                 android:layout_gravity="center_horizontal"/>
             <TextView
                 android:layout_width="match_parent"
@@ -170,10 +170,4 @@
 
 
     </LinearLayout>
-    <android.support.v7.widget.SwitchCompat
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/switchCompatButton"
-        app:showText="false"
-        android:layout_gravity="center_horizontal"/>
 </LinearLayout>

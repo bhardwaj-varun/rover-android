@@ -1,4 +1,4 @@
-package com.android.roverandroid.database;
+package com.android.rover.database;
 
 import android.provider.BaseColumns;
 
