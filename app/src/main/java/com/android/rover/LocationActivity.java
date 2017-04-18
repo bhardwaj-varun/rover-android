@@ -1,6 +1,10 @@
 package com.android.rover;
 
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -20,12 +24,21 @@ import com.google.android.gms.location.LocationServices;
 public class LocationActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener,
+        SensorEventListener {
 
     private final static String TAG = "LocationActivityTAG";
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    private TextView tvLatitude,tvLongitude,tvAccuracy;
+    private TextView tvLatitude,tvLongitude,tvAccuracy,tvAltitude,tvX,tvY,tvZ;
+    protected Location mLastLocation;
+    private Sensor mySensor;
+    private SensorManager SM;
+    private float[] mGravity;
+    private float mAccel;
+    private float mAccelCurrent;
+    private float mAccelLast;
+    boolean isMoving=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +48,15 @@ public class LocationActivity extends AppCompatActivity implements
         tvLatitude = (TextView) findViewById(R.id.tvLatitude) ;
         tvLongitude = (TextView) findViewById(R.id.tvLongitude);
         tvAccuracy = (TextView) findViewById(R.id.tvAccuracy);
+        tvAltitude = (TextView) findViewById(R.id.tvAltitude);
+        tvX=(TextView) findViewById(R.id.tvX);
+        tvY=(TextView) findViewById(R.id.tvY);
+        tvZ=(TextView) findViewById(R.id.tvZ);
         buildGoogleApiClient();
+        //Create our Sensor
+        SM=(SensorManager)getSystemService(SENSOR_SERVICE);
+        //Accelerometer Sensor
+        mySensor=SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
     }
 
@@ -62,6 +83,19 @@ public class LocationActivity extends AppCompatActivity implements
         Log.e(TAG, "Google Api On stop Connection disconnected");
         Toast.makeText(this, "Google Api On stop Connection disconnected", Toast.LENGTH_SHORT).show();
         super.onStop();
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        //Register Sensor Listener
+        SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_FASTEST);
+    }
+    @Override
+    protected void onPause(){
+        //unregister Senser Listener
+        SM.unregisterListener(this);
+        super.onPause();
+
     }
 
     @Override
@@ -100,5 +134,18 @@ public class LocationActivity extends AppCompatActivity implements
         tvLatitude.setText(Double.toString(location.getLatitude()));
         tvLongitude.setText(Double.toString(location.getLongitude()));
         tvAccuracy.setText(Double.toString(location.getAccuracy()));
+        tvAltitude.setText(Double.toString(location.getAltitude()));
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        tvX.setText("X : "+String.valueOf(event.values[0]));
+        tvY.setText("Y : "+String.valueOf(event.values[1]));
+        tvZ.setText("Z : "+String.valueOf(event.values[2]));
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 }
