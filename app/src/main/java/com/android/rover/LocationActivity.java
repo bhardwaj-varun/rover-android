@@ -30,7 +30,7 @@ public class LocationActivity extends AppCompatActivity implements
     private final static String TAG = "LocationActivityTAG";
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    private TextView tvLatitude,tvLongitude,tvAccuracy,tvAltitude,tvX,tvY,tvZ;
+    private TextView tvLatitude,tvLongitude,tvAccuracy,tvAltitude,tvX,tvY,tvZ,tvIsMoving;
     protected Location mLastLocation;
     private Sensor mySensor;
     private SensorManager SM;
@@ -44,7 +44,6 @@ public class LocationActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location);
-
         tvLatitude = (TextView) findViewById(R.id.tvLatitude) ;
         tvLongitude = (TextView) findViewById(R.id.tvLongitude);
         tvAccuracy = (TextView) findViewById(R.id.tvAccuracy);
@@ -52,6 +51,7 @@ public class LocationActivity extends AppCompatActivity implements
         tvX=(TextView) findViewById(R.id.tvX);
         tvY=(TextView) findViewById(R.id.tvY);
         tvZ=(TextView) findViewById(R.id.tvZ);
+        tvIsMoving = (TextView) findViewById(R.id.tvIsMoving);
         buildGoogleApiClient();
         //Create our Sensor
         SM=(SensorManager)getSystemService(SENSOR_SERVICE);
@@ -142,8 +142,45 @@ public class LocationActivity extends AppCompatActivity implements
         tvX.setText("X : "+String.valueOf(event.values[0]));
         tvY.setText("Y : "+String.valueOf(event.values[1]));
         tvZ.setText("Z : "+String.valueOf(event.values[2]));
+
+        if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+            mGravity =event.values.clone();
+
+            //shake detection
+            float x = mGravity[0];
+            float y = mGravity[1];
+            float z = mGravity[2];
+            mAccelLast = mAccelCurrent;
+            mAccelCurrent = (float)Math.sqrt(x*x+y*y+z*z);
+            float delta = mAccelCurrent - mAccelLast;
+            mAccel = mAccel*0.9f + delta;
+            mAccel = (float)round(mAccel,3);
+
+            if(Math.abs(mAccel) > 1){
+                isMoving = true;
+            }
+            else if(Math.abs(mAccel) < 0.003 && Math.abs(mAccel)>0){
+                isMoving = false;
+            }
+
+        }
+        tvIsMoving.setText("IsMoving:"+isMoving);
     }
 
+    /**
+     *Static method for rounding
+     * @param value
+     * @param places
+     * @return
+     */
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
+    }
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
