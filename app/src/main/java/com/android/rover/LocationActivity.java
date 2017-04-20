@@ -1,6 +1,9 @@
 package com.android.rover;
 
+import android.support.v4.app.LoaderManager;
+
 import android.content.Context;
+import android.content.Loader;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -32,7 +35,8 @@ public class LocationActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
         SensorEventListener,
-        ConnectivityReceiver.ConnectivityReceiverListener {
+        ConnectivityReceiver.ConnectivityReceiverListener,
+        LoaderManager.LoaderCallbacks<Integer>{
 
     private final static String TAG = "LocationActivityTAG";
     private GoogleApiClient mGoogleApiClient;
@@ -67,6 +71,8 @@ public class LocationActivity extends AppCompatActivity implements
 
         DbHandler dbHandler=new DbHandler(this);
         dbHandler.getAllLocations();
+        getSupportLoaderManager().initLoader(0,null,this).forceLoad();
+        //(android.support.v4.app.LoaderManager.LoaderCallbacks<Integer>)
 
     }
     protected synchronized void buildGoogleApiClient() {
@@ -244,4 +250,23 @@ public class LocationActivity extends AppCompatActivity implements
         Toast.makeText(this,"Connected : "+isConnected,Toast.LENGTH_SHORT).show();
         Log.e(TAG,"Connection Status : "+isConnected);
     }
+
+
+    @Override
+    public android.support.v4.content.Loader<Integer> onCreateLoader(int id, Bundle args) {
+
+        return new LocationLoader(this);
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<Integer> loader, Integer data) {
+        Log.e(TAG,"Recieved Data is "+ data.toString());
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Integer> loader) {
+        Log.e(TAG,"Reset Called ");
+    }
+
+
 }
