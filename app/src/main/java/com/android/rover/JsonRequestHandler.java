@@ -26,6 +26,29 @@ public class JsonRequestHandler {
     private String TAG="JsonRequestHandler";
     private String string;
 
+    public String convertPairValueToString(ContentValues params){
+        StringBuilder stringBuilder= new StringBuilder();
+        boolean firstPair=true;
+
+        for(Map.Entry<String, Object> entry : params.valueSet()) {
+            if (firstPair) {
+                firstPair = false;
+            }
+            else
+                stringBuilder.append("&");
+            try{
+                stringBuilder.append(URLEncoder.encode(entry.getKey(),"UTF-8"));//name
+                stringBuilder.append("=");
+                stringBuilder.append(URLEncoder.encode(entry.getValue().toString(),"UTF-8")); //value
+
+            }
+            catch (Exception exception){
+                exception.printStackTrace();
+            }
+        }
+        return stringBuilder.toString();
+    }
+
 
 
     public String jsonStringFromServer(String urlForServer, ContentValues params, String method) {
@@ -93,5 +116,39 @@ public class JsonRequestHandler {
         }
         return jsonArray;
     }
+    public Integer getResponseOnly(String urlForServer, String params, String method){
+        JSONArray jsonArray=null;
+        StringBuilder stringBuilder = new StringBuilder();
+        String paramStringSentToServer;
+        DataOutputStream dataOutputStream;
+        try {
+            URL url = new URL(urlForServer);
+            httpURLConnection = (HttpURLConnection) url.openConnection();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        try{
+            httpURLConnection.setRequestMethod(method);
+            httpURLConnection.setReadTimeout(10000);//in millisecond
+            httpURLConnection.setConnectTimeout(15000);
+            paramStringSentToServer=params;
+            httpURLConnection.setDoOutput(true);
+            httpURLConnection.connect();
+            if(params!=null) {
+                dataOutputStream = new DataOutputStream(httpURLConnection.getOutputStream());
+                dataOutputStream.writeBytes(paramStringSentToServer);
+            }
+        }catch(Exception e){e.printStackTrace();
+        }
+        try{
+            httpURLConnectionResponseCode =httpURLConnection.getResponseCode();
 
+        }catch (Exception e){e.printStackTrace();}
+        finally {
+            if(httpURLConnection!=null)
+                httpURLConnection.disconnect();
+        }
+
+        return httpURLConnectionResponseCode;
+    }
 }

@@ -39,6 +39,7 @@ public class LocationActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Integer>{
 
     private final static String TAG = "LocationActivityTAG";
+    String jsonString;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private TextView tvLatitude,tvLongitude,tvAccuracy,tvAltitude,tvX,tvY,tvZ,tvIsMoving;
@@ -72,6 +73,7 @@ public class LocationActivity extends AppCompatActivity implements
         DbHandler dbHandler=new DbHandler(this);
         dbHandler.getAllLocations();
         getSupportLoaderManager().initLoader(0,null,this).forceLoad();
+
         //(android.support.v4.app.LoaderManager.LoaderCallbacks<Integer>)
 
     }
@@ -253,14 +255,29 @@ public class LocationActivity extends AppCompatActivity implements
 
 
     @Override
-    public android.support.v4.content.Loader<Integer> onCreateLoader(int id, Bundle args) {
+    public  android.support.v4.content.Loader<Integer> onCreateLoader(int id, Bundle args) {
 
-        return new LocationLoader(this);
+        switch (id){
+            case 0: return new LocationLoader(this,id,null);
+            case 1: return new LocationLoader(this,id,jsonString);
+        }
+
+        return null;
     }
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Integer> loader, Integer data) {
-        Log.e(TAG,"Recieved Data is "+ data.toString());
+
+        Log.e(TAG,"Recieved Data is "+ data.toString()+"Loader Id : "+loader.getId());
+        if(loader.getId()==0) {
+            DbHandler dbHandler = new DbHandler(this);
+             jsonString=dbHandler.fetchingNewData(data);
+            getSupportLoaderManager().initLoader(1,null,this).forceLoad();
+        }
+        else if(loader.getId()==1){
+
+        }
+        //getSupportLoaderManager().initLoader(1,null,this).forceLoad();
     }
 
     @Override
