@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.android.rover.Location;
 import com.android.rover.database.LocationContract.LocationEntry;
 /**
  * Class DbHandler handles CRUD operations
@@ -84,7 +85,12 @@ public class DbHandler extends  Activity{
         StringBuilder jsonString=new StringBuilder();
         locationDbHelper= new LocationDbHelper(context);
         SQLiteDatabase db= locationDbHelper.getReadableDatabase();
-        String SELECT_ALL_ROWS="SELECT * FROM "+LocationEntry.TABLE_NAME+" WHERE "+LocationEntry._ID+" >" + id+ " ;";
+        String SELECT_ALL_ROWS="SELECT "
+                            +LocationEntry._ID+","
+                            +LocationEntry.COLUMN_LAT+","
+                            +LocationEntry.COLUMN_LONG+","
+                            +LocationEntry.COLUMN_ACCURACY+","
+                            +LocationEntry.COLUMN_DATETIME+" FROM "+LocationEntry.TABLE_NAME+" WHERE "+LocationEntry._ID+" >" + id+ " ;";
         Cursor cursor = db.rawQuery(SELECT_ALL_ROWS, null);
 
 
@@ -102,7 +108,7 @@ public class DbHandler extends  Activity{
                 double longitude=cursor.getDouble(cursor.getColumnIndex(LocationEntry.COLUMN_LONG));
                 int accuracy=cursor.getInt(cursor.getColumnIndex(LocationEntry.COLUMN_ACCURACY));
                 String dateTIme=cursor.getString(cursor.getColumnIndex(LocationEntry.COLUMN_DATETIME));
-                jsonString.append("{latitude:"+latitude+",longitude:"+longitude+",accuracy:"+accuracy+",dateTime:"+dateTIme+"}");
+                jsonString.append("{\"latitude\":"+latitude+",\"longitude\":"+longitude+",\"accuracy\":"+accuracy+",\"dateTime\":\""+dateTIme+"\"}");
                 if(i!=cursor.getCount()-1)
                     jsonString.append(",");
                 Log.e("row id : "+ _id," Lat: "+latitude+" Long: "+longitude+" Accuracy :"+accuracy+" DateTime : "+ dateTIme);

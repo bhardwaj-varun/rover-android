@@ -68,6 +68,7 @@ public class JsonRequestHandler {
             httpURLConnection.setReadTimeout(10000);//in millisecond
             httpURLConnection.setConnectTimeout(15000);
 
+
             if(params!=null) {
                 // paramStringSentToServer=
                 httpURLConnection.setDoOutput(true);
@@ -117,8 +118,6 @@ public class JsonRequestHandler {
         return jsonArray;
     }
     public Integer getResponseOnly(String urlForServer, String params, String method){
-        JSONArray jsonArray=null;
-        StringBuilder stringBuilder = new StringBuilder();
         String paramStringSentToServer;
         DataOutputStream dataOutputStream;
         try {
@@ -131,6 +130,8 @@ public class JsonRequestHandler {
             httpURLConnection.setRequestMethod(method);
             httpURLConnection.setReadTimeout(10000);//in millisecond
             httpURLConnection.setConnectTimeout(15000);
+            httpURLConnection.setRequestProperty("Content-Type", "application/json");
+            //con.setRequestProperty("Accept", "application/json");
             paramStringSentToServer=params;
             httpURLConnection.setDoOutput(true);
             httpURLConnection.connect();
@@ -142,7 +143,7 @@ public class JsonRequestHandler {
         }
         try{
             httpURLConnectionResponseCode =httpURLConnection.getResponseCode();
-
+            Log.e("Response  code : ",String.valueOf(httpURLConnectionResponseCode));
         }catch (Exception e){e.printStackTrace();}
         finally {
             if(httpURLConnection!=null)

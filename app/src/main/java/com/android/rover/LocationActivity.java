@@ -233,20 +233,6 @@ public class LocationActivity extends AppCompatActivity implements
             return false;
     }
 
-
-    private boolean isNetworkConnected(){
-        ConnectivityManager cm= (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        return cm.getActiveNetworkInfo() !=null && cm.getActiveNetworkInfo().isConnected();
-    }
-    private boolean isInternetAvailable(){
-        try {
-            final InetAddress address=InetAddress.getByName("https://www.google.com");
-            return !address.equals("");
-        }catch (UnknownHostException e)
-        {e.printStackTrace();}
-        return false;
-        }
-
     @Override
     public void onNetworkConnectionChanged(boolean isConnected) {
         Toast.makeText(this,"Connected : "+isConnected,Toast.LENGTH_SHORT).show();
@@ -277,7 +263,7 @@ public class LocationActivity extends AppCompatActivity implements
         else if(loader.getId()==1){
 
         }
-        //getSupportLoaderManager().initLoader(1,null,this).forceLoad();
+
     }
 
     @Override
