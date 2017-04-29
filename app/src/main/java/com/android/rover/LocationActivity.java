@@ -1,16 +1,12 @@
 package com.android.rover;
 
 import android.support.v4.app.LoaderManager;
-
-import android.content.Context;
-import android.content.Loader;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,9 +22,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 public class LocationActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
