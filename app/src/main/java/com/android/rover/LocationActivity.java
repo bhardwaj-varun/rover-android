@@ -1,13 +1,12 @@
 package com.android.rover;
 
-import android.content.Context;
+import android.support.v4.app.LoaderManager;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -24,17 +23,16 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 public class LocationActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
         SensorEventListener,
-        ConnectivityReceiver.ConnectivityReceiverListener {
+        ConnectivityReceiver.ConnectivityReceiverListener,
+        LoaderManager.LoaderCallbacks<Integer>{
 
     private final static String TAG = "LocationActivityTAG";
+    String jsonString;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private TextView tvLatitude,tvLongitude,tvAccuracy,tvAltitude,tvX,tvY,tvZ,tvIsMoving;
@@ -67,6 +65,9 @@ public class LocationActivity extends AppCompatActivity implements
 
         DbHandler dbHandler=new DbHandler(this);
         dbHandler.getAllLocations();
+        getSupportLoaderManager().initLoader(0,null,this).forceLoad();
+
+        //(android.support.v4.app.LoaderManager.LoaderCallbacks<Integer>)
 
     }
     protected synchronized void buildGoogleApiClient() {
@@ -225,23 +226,43 @@ public class LocationActivity extends AppCompatActivity implements
             return false;
     }
 
-
-    private boolean isNetworkConnected(){
-        ConnectivityManager cm= (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        return cm.getActiveNetworkInfo() !=null && cm.getActiveNetworkInfo().isConnected();
-    }
-    private boolean isInternetAvailable(){
-        try {
-            final InetAddress address=InetAddress.getByName("https://www.google.com");
-            return !address.equals("");
-        }catch (UnknownHostException e)
-        {e.printStackTrace();}
-        return false;
-        }
-
     @Override
     public void onNetworkConnectionChanged(boolean isConnected) {
         Toast.makeText(this,"Connected : "+isConnected,Toast.LENGTH_SHORT).show();
         Log.e(TAG,"Connection Status : "+isConnected);
     }
+
+
+    @Override
+    public  android.support.v4.content.Loader<Integer> onCreateLoader(int id, Bundle args) {
+
+        switch (id){
+            case 0: return new LocationLoader(this,id,null);
+            case 1: return new LocationLoader(this,id,jsonString);
+        }
+
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<Integer> loader, Integer data) {
+
+        Log.e(TAG,"Recieved Data is "+ data.toString()+"Loader Id : "+loader.getId());
+        if(loader.getId()==0) {
+            DbHandler dbHandler = new DbHandler(this);
+             jsonString=dbHandler.fetchingNewData(data);
+            getSupportLoaderManager().initLoader(1,null,this).forceLoad();
+        }
+        else if(loader.getId()==1){
+
+        }
+
+    }
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Integer> loader) {
+        Log.e(TAG,"Reset Called ");
+    }
+
+
 }
