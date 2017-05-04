@@ -25,8 +25,7 @@ public class LocationLoader extends android.support.v4.content.AsyncTaskLoader{
             Integer data = serverHandler.getLastID();
             return data;
         }
-        else if(id==1){//id==1 for post requet
-            Log.e("Json data for server : " , params);
+        else if(id==1){//id==1 for post request
             serverHandler= new ServerHandler();
             return serverHandler.getPostStatus(params);
         }

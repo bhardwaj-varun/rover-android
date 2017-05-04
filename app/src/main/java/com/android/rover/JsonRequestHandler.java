@@ -26,35 +26,8 @@ public class JsonRequestHandler {
     private String TAG="JsonRequestHandler";
     private String string;
 
-    public String convertPairValueToString(ContentValues params){
-        StringBuilder stringBuilder= new StringBuilder();
-        boolean firstPair=true;
-
-        for(Map.Entry<String, Object> entry : params.valueSet()) {
-            if (firstPair) {
-                firstPair = false;
-            }
-            else
-                stringBuilder.append("&");
-            try{
-                stringBuilder.append(URLEncoder.encode(entry.getKey(),"UTF-8"));//name
-                stringBuilder.append("=");
-                stringBuilder.append(URLEncoder.encode(entry.getValue().toString(),"UTF-8")); //value
-
-            }
-            catch (Exception exception){
-                exception.printStackTrace();
-            }
-        }
-        return stringBuilder.toString();
-    }
-
-
-
     public String jsonStringFromServer(String urlForServer, ContentValues params, String method) {
         StringBuilder stringBuilder = new StringBuilder();
-        String paramStringSentToServer;
-        DataOutputStream dataOutputStream;
         try {
             URL url = new URL(urlForServer);
             httpURLConnection = (HttpURLConnection) url.openConnection();
@@ -65,20 +38,16 @@ public class JsonRequestHandler {
         }
         try{
             httpURLConnection.setRequestMethod(method);
-            httpURLConnection.setReadTimeout(10000);//in millisecond
-            httpURLConnection.setConnectTimeout(15000);
-
+            httpURLConnection.setReadTimeout(30000);//in millisecond
+            httpURLConnection.setConnectTimeout(30000);
 
             if(params!=null) {
-                // paramStringSentToServer=
+
                 httpURLConnection.setDoOutput(true);
 
             }
             httpURLConnection.connect();
-            if(params!=null) {
-                dataOutputStream = new DataOutputStream(httpURLConnection.getOutputStream());
-                //dataOutputStream.writeBytes(paramStringSentToServer);
-            }
+
         }catch(Exception e){e.printStackTrace();
         }
         try{
@@ -89,7 +58,6 @@ public class JsonRequestHandler {
             }
             bufferedReader.close();
             Log.e(TAG,"Json Object from Server"+ stringBuilder.toString());
-
 
         }catch (Exception e){e.printStackTrace();}
         finally {
@@ -108,17 +76,8 @@ public class JsonRequestHandler {
         }
         return jsonObject;
     }
-    public JSONArray jsonArrayFromServer(String urlForServer, ContentValues params, String method){
-        JSONArray jsonArray=null;
-        try {
-            jsonArray = new JSONArray(jsonStringFromServer(urlForServer, params, method));
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        return jsonArray;
-    }
+
     public Integer getResponseOnly(String urlForServer, String params, String method){
-        String paramStringSentToServer;
         DataOutputStream dataOutputStream;
         try {
             URL url = new URL(urlForServer);
@@ -131,13 +90,11 @@ public class JsonRequestHandler {
             httpURLConnection.setReadTimeout(10000);//in millisecond
             httpURLConnection.setConnectTimeout(15000);
             httpURLConnection.setRequestProperty("Content-Type", "application/json");
-            //con.setRequestProperty("Accept", "application/json");
-            paramStringSentToServer=params;
             httpURLConnection.setDoOutput(true);
             httpURLConnection.connect();
             if(params!=null) {
                 dataOutputStream = new DataOutputStream(httpURLConnection.getOutputStream());
-                dataOutputStream.writeBytes(paramStringSentToServer);
+                dataOutputStream.writeBytes(params);
             }
         }catch(Exception e){e.printStackTrace();
         }

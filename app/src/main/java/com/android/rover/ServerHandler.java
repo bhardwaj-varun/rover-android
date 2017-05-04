@@ -29,7 +29,7 @@ public class ServerHandler implements ServerUrls {
         return 0;
     }
     public Integer getPostStatus(String params){
-        //String string = " [{\"latitude\": 25.34,\"longitude\": 36.65,\"accuracy\": 16,\"dateTime\": \"2017-04-19 11:15:56\"}]";
+        //String string = " [{\"latitude\": 25.34,\"longitude\": 36.65,\"paramStringSentToServer=params;accuracy\": 16,\"dateTime\": \"2017-04-19 11:15:56\"}]";
 
         jsonRequestHandler=new JsonRequestHandler();
         return jsonRequestHandler.getResponseOnly(ServerUrls.all,params,"POST");

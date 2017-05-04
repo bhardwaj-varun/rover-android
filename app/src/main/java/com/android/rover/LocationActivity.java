@@ -1,5 +1,12 @@
 package com.android.rover;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Handler;
 import android.support.v4.app.LoaderManager;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -23,12 +30,14 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class LocationActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
         SensorEventListener,
-        ConnectivityReceiver.ConnectivityReceiverListener,
         LoaderManager.LoaderCallbacks<Integer>{
 
     private final static String TAG = "LocationActivityTAG";
@@ -45,6 +54,7 @@ public class LocationActivity extends AppCompatActivity implements
     boolean isMoving=false;
     private double lastLatitude,latitude,lastLongitude,longitude,altitude,vel,bear,et;
     private int accuracy;
+    private boolean isConnected=false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,18 +67,20 @@ public class LocationActivity extends AppCompatActivity implements
         tvY=(TextView) findViewById(R.id.tvY);
         tvZ=(TextView) findViewById(R.id.tvZ);
         tvIsMoving = (TextView) findViewById(R.id.tvIsMoving);
+
         buildGoogleApiClient();
-        //Create our Sensor
+        //get sensor services
         SM=(SensorManager)getSystemService(SENSOR_SERVICE);
         //Accelerometer Sensor
         mySensor=SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
+        SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_FASTEST);
+        //Database handler
         DbHandler dbHandler=new DbHandler(this);
         dbHandler.getAllLocations();
-        getSupportLoaderManager().initLoader(0,null,this).forceLoad();
-
-        //(android.support.v4.app.LoaderManager.LoaderCallbacks<Integer>)
-
+        //register broadcast receiver
+        this.registerReceiver(this.broadcastReceiver,new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        //calling asyncloader repeatedly
+        callLoaders();
     }
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -76,39 +88,63 @@ public class LocationActivity extends AppCompatActivity implements
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
         mGoogleApiClient.connect();
-        Log.e(TAG, "Google Api On start Connected");
-        Toast.makeText(this, "Google Api On start Connected", Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "Google Api On create Connected");
     }
 
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            boolean noConnectivity= intent.getBooleanExtra(ConnectivityManager.EXTRA_NO_CONNECTIVITY,false);
+            String reason = intent.getStringExtra(ConnectivityManager.EXTRA_REASON);
+            boolean isFailOver = intent.getBooleanExtra(ConnectivityManager.EXTRA_IS_FAILOVER,false);
+
+            ConnectivityManager connectivityManager =  (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo currentNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            NetworkInfo otherNetworkInfo = (NetworkInfo)intent.getParcelableExtra(ConnectivityManager.EXTRA_OTHER_NETWORK_INFO);
+            if(currentNetworkInfo!=null && currentNetworkInfo.isConnected()){
+                isConnected=true;
+                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Network connected");
+            }else{
+                isConnected=false;
+                Log.e(TAG, "Network disconnected");
+                Toast.makeText(getApplicationContext(), "Not connected "+reason, Toast.LENGTH_LONG).show();
+            }
+        }
+    };
+
+    public void callLoaders(){
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask doServerwork =  new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            if(isConnected){
+                                getSupportLoaderManager().restartLoader(0,null,LocationActivity.this).forceLoad();
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(doServerwork,0,20000); //every 20-secs
+    }
     @Override
-    protected void onStop() {
+    protected void onDestroy(){
         if (mGoogleApiClient.isConnected())
             mGoogleApiClient.disconnect();
-        Log.e(TAG, "Google Api On stop Connection disconnected");
-        Toast.makeText(this, "Google Api On stop Connection disconnected", Toast.LENGTH_SHORT).show();
-        super.onStop();
-    }
-    @Override
-    protected void onResume(){
-        super.onResume();
-        //Register Sensor Listener
-        SM.registerListener(this,mySensor,SensorManager.SENSOR_DELAY_FASTEST);
-        ConnectionApplication.getInstance().setConnectivityListener(this);
-    }
-    @Override
-    protected void onPause(){
-        //unregister Senser Listener
+        Log.e(TAG, "Google Api On destroy Connection disconnected");
+        this.unregisterReceiver(broadcastReceiver);
         SM.unregisterListener(this);
-        super.onPause();
-
+        super.onDestroy();
     }
-
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         mLocationRequest = LocationRequest.create();
@@ -151,8 +187,6 @@ public class LocationActivity extends AppCompatActivity implements
         et=location.getElapsedRealtimeNanos();
         vel=location.getSpeed();
         bear=location.getBearing();
-        if(location.getExtras()!=null)
-            Log.e(TAG,"Location Extras" +location.getExtras().toString());
         tvLatitude.setText(String.valueOf(latitude));
         tvLongitude.setText(String.valueOf(longitude));
         tvAccuracy.setText(String.valueOf(accuracy));
@@ -161,12 +195,13 @@ public class LocationActivity extends AppCompatActivity implements
         if(isMoving){
             if(isLocationChanged()){
                 Log.e(TAG,"Location changed : "+location.toString());
-                DbHandler dbHandler=new DbHandler(this);
-                dbHandler.insertCurrentLocation(latitude,longitude,accuracy);
-                dbHandler.getAllLocations();
+                if(accuracy <= 10) { //accuracy less than 16 meters
+                    DbHandler dbHandler = new DbHandler(this);
+                    dbHandler.insertCurrentLocation(latitude, longitude, accuracy);
+                    dbHandler.getAllLocations();
+                }
             }
         }
-
     }
 
     @Override
@@ -219,7 +254,6 @@ public class LocationActivity extends AppCompatActivity implements
      * @return boolean
      */
     public boolean isLocationChanged(){
-
         if(Math.abs(latitude-lastLatitude)>0 || Math.abs(longitude-lastLongitude) >0)
             return true;
         else
@@ -227,42 +261,30 @@ public class LocationActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onNetworkConnectionChanged(boolean isConnected) {
-        Toast.makeText(this,"Connected : "+isConnected,Toast.LENGTH_SHORT).show();
-        Log.e(TAG,"Connection Status : "+isConnected);
-    }
-
-
-    @Override
     public  android.support.v4.content.Loader<Integer> onCreateLoader(int id, Bundle args) {
-
         switch (id){
             case 0: return new LocationLoader(this,id,null);
             case 1: return new LocationLoader(this,id,jsonString);
         }
-
         return null;
     }
 
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Integer> loader, Integer data) {
-
-        Log.e(TAG,"Recieved Data is "+ data.toString()+"Loader Id : "+loader.getId());
+        Log.e(TAG,"Received Data is "+ data.toString()+"Loader Id : "+loader.getId());
         if(loader.getId()==0) {
             DbHandler dbHandler = new DbHandler(this);
-             jsonString=dbHandler.fetchingNewData(data);
-            getSupportLoaderManager().initLoader(1,null,this).forceLoad();
+            jsonString=dbHandler.fetchingNewData(data);
+            Log.e(TAG,"Length = "+jsonString.length());
+            Log.e("Json data for server : " , jsonString);
+            if(jsonString.length()>2) //if jsonstring is not empty array i.e "[]"
+                getSupportLoaderManager().restartLoader(1,null,this).forceLoad();
         }
-        else if(loader.getId()==1){
-
-        }
-
     }
 
     @Override
     public void onLoaderReset(android.support.v4.content.Loader<Integer> loader) {
         Log.e(TAG,"Reset Called ");
     }
-
 
 }
