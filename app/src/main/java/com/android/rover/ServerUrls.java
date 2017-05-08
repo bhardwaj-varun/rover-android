@@ -5,7 +5,7 @@ package com.android.rover;
  */
 
 public interface ServerUrls {
-    public final String lastID="http://192.168.0.13:8000/id";
-    public final String all="http://192.168.0.13:8000/all";
+    public final String lastID="http://192.168.0.6:8000/id";
+    public final String all="http://192.168.0.6:8000/all";
 
 }

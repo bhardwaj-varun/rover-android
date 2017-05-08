@@ -195,11 +195,16 @@ public class LocationActivity extends AppCompatActivity implements
         if(isMoving){
             if(isLocationChanged()){
                 Log.e(TAG,"Location changed : "+location.toString());
-                if(accuracy <= 10) { //accuracy less than 16 meters
+                if(accuracy <= 16.0) { //accuracy less then equal to  16 meters
+                    Log.e("Accuracy <=  16 :", String.valueOf(accuracy));
                     DbHandler dbHandler = new DbHandler(this);
                     dbHandler.insertCurrentLocation(latitude, longitude, accuracy);
                     dbHandler.getAllLocations();
                 }
+                else{
+                    Log.e("Accuracy > 16 :", String.valueOf(accuracy));
+                }
+
             }
         }
     }
